@@ -34,4 +34,10 @@ void loop() {
   int sensori3 = digitalRead(ir3);
   int sensori4 = digitalRead(ir4);
   int sensori5 = digitalRead(ir5);
+
+  Serial.print(!sensori1);
+  Serial.print(!sensori2);
+  Serial.print(!sensori3);
+  Serial.print(!sensori4);
+  Serial.print(!sensori5);
 }
