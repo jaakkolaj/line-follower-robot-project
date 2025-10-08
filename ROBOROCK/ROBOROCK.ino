@@ -34,10 +34,127 @@ void loop() {
   int sensori3 = digitalRead(ir3);
   int sensori4 = digitalRead(ir4);
   int sensori5 = digitalRead(ir5);
+}
 
-  Serial.print(!sensori1);
-  Serial.print(!sensori2);
-  Serial.print(!sensori3);
-  Serial.print(!sensori4);
-  Serial.print(!sensori5);
+  //if only middle sensor detects black line
+  if((ir1 == 1) && (ir2 == 1) && (ir3 == 0) && (ir4 == 1) && (ir5 == 1))
+  {
+    //going forward with full speed 
+    analogWrite(enableVasen, 120); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableOikea, 120); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, HIGH);
+    digitalWrite(vasenEtu, HIGH);
+    digitalWrite(oikeaTaka, LOW);
+    digitalWrite(vasenTaka, LOW);
+  }
+  
+  //if only left sensor detects black line
+  if((ir1 == 1) && (ir2 == 0) && (ir3 == 1) && (ir4 == 1) && (ir5 == 1))
+  {
+    //going left
+    analogWrite(enableOikea, 150); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 150); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, LOW);
+    digitalWrite(oikeaTaka, HIGH);
+    digitalWrite(vasenTaka, LOW);
+    
+
+  }
+  
+  //if only left most sensor detects black line
+  if((ir1 == 0) && (ir2 == 1) && (ir3 == 1) && (ir4 == 1) && (ir5 == 1))
+  {
+    //going left with full speed 
+    analogWrite(enableOikea, 180); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 180); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, HIGH);
+    digitalWrite(vasenEtu, LOW);
+    digitalWrite(oikeaTaka, HIGH);
+    digitalWrite(vasenTaka, LOW);
+    
+
+  }
+
+  //if only right sensor detects black line
+  if((ir1 == 1) && (ir2 == 1) && (ir3 == 1) && (ir4 == 0) && (ir5 == 1))
+  {
+    //going right
+    analogWrite(enableOikea, 150); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 150); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, HIGH);
+    digitalWrite(oikeaTaka, LOW);
+    digitalWrite(vasenTaka, LOW);
+  }
+
+  //if only right most sensor detects black line
+  if((ir1 == 1) && (ir2 == 1) && (ir3 == 1) && (ir4 == 1) && (ir5 == 0))
+  {
+    //going right with full speed 
+    analogWrite(enableOikea, 180); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 180); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, HIGH);
+    digitalWrite(oikeaTaka, LOW);
+    digitalWrite(vasenTaka, HIGH);
+  }
+
+  //if middle and right sensor detects black line
+  if((ir1 == 1) && (ir2 == 1) && (ir3 == 0) && (ir4 == 0) && (ir5 == 1))
+  {
+    //going right
+    analogWrite(enableOikea, 150); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 150); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, HIGH);
+    digitalWrite(oikeaTaka, LOW);
+    digitalWrite(vasenTaka, LOW);
+  }
+
+  //if middle and left sensor detects black line
+  if((ir1 == 1) && (ir2 == 0) && (ir3 == 0) && (ir4 == 1) && (ir5 == 1))
+  {
+    //going left
+    analogWrite(enableOikea, 150); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 150); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, LOW);
+    digitalWrite(oikeaTaka, HIGH);
+    digitalWrite(vasenTaka, LOW);
+  }
+
+  //if middle, left and left most sensor detects black line
+  if((ir1 == 0) && (ir2 == 0) && (ir3 == 0) && (ir4 == 1) && (ir5 == 1))
+  {
+    //going left
+    analogWrite(enableOikea, 150); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 150); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, LOW);
+    digitalWrite(oikeaTaka, HIGH);
+    digitalWrite(vasenTaka, LOW);
+  }
+
+  //if middle, right and right most sensor detects black line
+  if((ir1 == 1) && (ir2 == 1) && (ir3 == 0) && (ir4 == 0) && (ir5 == 0))
+  {
+    //going right
+    analogWrite(enableOikea, 150); //you can adjust the speed of the motors from 0-255
+    analogWrite(enableVasen, 150); //you can adjust the speed of the motors from 0-255
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, HIGH);
+    digitalWrite(oikeaTaka, LOW);
+    digitalWrite(vasenTaka, LOW);
+  }
+
+  //if all sensors are on a black line
+  if((ir1 == 1) && (ir2 == 1) && (ir3 == 0) && (ir4 == 1) && (ir5 == 1))
+  {
+    //stop
+    digitalWrite(oikeaEtu, LOW);
+    digitalWrite(vasenEtu, LOW);
+    digitalWrite(oikeaTaka, LOW);
+    digitalWrite(vasenTaka, LOW);
+  }
 }
