@@ -25,7 +25,7 @@
 #define ir4 A3
 #define ir5 A4
 
-int maxEtaisyys = 20;
+int maxEtaisyys = 25;
 int etaisyys = 100;
 
 bool vaistoliike = false;
@@ -35,7 +35,7 @@ Servo servo;
 
 void setup() {
   pinMode(vasenEteen, OUTPUT);
-  pinMode(oikeaTaua, OUTPUT);
+  pinMode(oikeaTaakse, OUTPUT);
   pinMode(oikeaEteen, OUTPUT);
   pinMode(oikeaTaakse, OUTPUT);
   pinMode(enableVasen, OUTPUT);
@@ -54,7 +54,7 @@ void setup() {
 
   servo.attach(9);
 
-  servo.write(115);
+  servo.write(90);
   delay(2000);
   etaisyys = skannaa();
 
@@ -74,134 +74,71 @@ int  skannaa(){
   }
   return cm;
 }
+float Kp = 10.0;   
+float Kd = 0.0;   
+float previousError = 0;
+int baseSpeed = 120;
 
-void viivanSeuranta(){
-  int sensori1 = digitalRead(ir1);
-  int sensori2 = digitalRead(ir2);
-  int sensori3 = digitalRead(ir3);
-  int sensori4 = digitalRead(ir4);
-  int sensori5 = digitalRead(ir5);
+// === Recovery memory ===
+unsigned long lastLineTime = 0;
+int lastDirection = 0; // -1 = left, 1 = right
 
-  Serial.print(!sensori1);
-  Serial.print(!sensori2);
-  Serial.print(!sensori3);
-  Serial.print(!sensori4);
-  Serial.println(!sensori5);
+void viivanSeurantaPD() {
+  int s1 = !digitalRead(ir1);
+  int s2 = !digitalRead(ir2);
+  int s3 = !digitalRead(ir3);
+  int s4 = !digitalRead(ir4);
+  int s5 = !digitalRead(ir5);
 
+  Serial.print(s1);
+  Serial.print(s2);
+  Serial.print(s3);
+  Serial.print(s4);
+  Serial.println(s5);
 
+  int position = (-2 * s1) + (-1 * s2) + (0 * s3) + (1 * s4) + (2 * s5);
+  int activeSensors = s1 + s2 + s3 + s4 + s5;
+  float error = 0;
+  if (activeSensors != 0) error = (float)position / activeSensors;
 
+  float derivative = error - previousError;
+  float correction = (Kp * error) + (Kd * derivative);
+  previousError = error;
 
-  //Keskimmäinen lukee mustaa jotenka mennään eteenpäin
-  if((sensori1 == 1) && (sensori2 == 1) && (sensori3 == 0) && (sensori4 == 1) && (sensori5 == 1))
-  {
-    analogWrite(enableVasen, 200); 
-    analogWrite(enableOikea, 200); 
-    digitalWrite(vasenEteen, HIGH);
-    digitalWrite(oikeaEteen, HIGH);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
+  int leftSpeed = baseSpeed + correction;
+  int rightSpeed = baseSpeed - correction;
+  leftSpeed = constrain(leftSpeed, 0, 255);
+  rightSpeed = constrain(rightSpeed, 0, 255);
+
+  // --- Movement ---
+  if (activeSensors > 0 && activeSensors < 5) {
+    analogWrite(enableVasen, leftSpeed);
+    analogWrite(enableOikea, rightSpeed);
+    eteenpain();
+    if (error < 0) lastDirection = -1;
+    else if (error > 0) lastDirection = 1;
+    lastLineTime = millis();
   }
-  
-  //Keskivasen lukee mustaa jotenka käännytään vasemalle
-  if((sensori1 == 1) && (sensori2 == 0) && (sensori3 == 1) && (sensori4 == 1) && (sensori5 == 1))
-  {
-    analogWrite(enableOikea, 180); 
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, LOW);
-    digitalWrite(oikeaEteen, HIGH);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
-    
-
+  else if (activeSensors == 5) {
+    seis();
   }
-  
-  //Vasen lukee mustaa jotenka käännytään vasemalle
-  if((sensori1 == 0) && (sensori2 == 1) && (sensori3 == 1) && (sensori4 == 1) && (sensori5 == 1))
-  {
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, LOW);
-    digitalWrite(oikeaEteen, HIGH);
-    digitalWrite(vasenTaakse, HIGH);
-    digitalWrite(oikeaTaakse, LOW);
-    
-
-  }
-
-  //keskioikea lukee mustaa jotenka käännytään oikealle
-  if((sensori1 == 1) && (sensori2 == 1) && (sensori3 == 1) && (sensori4 == 0) && (sensori5 == 1))
-  {
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, LOW);
-    digitalWrite(oikeaEteen, LOW);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, HIGH);
-  }
-
-  //Oikea lukee mustaa jotenka käännytään oikealle
-  if((sensori1 == 1) && (sensori2 == 1) && (sensori3 == 1) && (sensori4 == 1) && (sensori5 == 0))
-  {
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, HIGH);
-    digitalWrite(oikeaEteen, LOW);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, HIGH);
-  }
-
-  //Keskimmäinen ja keskioikee lukee mustaa jotenka käännytään oikealle
-  if((sensori1 == 1) && (sensori2 == 1) && (sensori3 == 0) && (sensori4 == 0) && (sensori5 == 1))
-  {
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, HIGH);
-    digitalWrite(oikeaEteen, LOW);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
-  }
-
-  //Keskimmäinen ja keskivasen lukee mustaa jotenka käännytään vasemmalle
-  if((sensori1 == 1) && (sensori2 == 0) && (sensori3 == 0) && (sensori4 == 1) && (sensori5 == 1))
-  {
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, LOW);
-    digitalWrite(oikeaEteen, HIGH);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
-  }
-
-  //Keskimmäinen ja siitä vasemmalle lukee mustaa jotenka käänytään vasemmalle
-  if((sensori1 == 0) && (sensori2 == 0) && (sensori3 == 0) && (sensori4 == 1) && (sensori5 == 1))
-  {
-   
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180);
-    digitalWrite(vasenEteen, LOW);
-    digitalWrite(oikeaEteen, HIGH);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
-  }
-
-  //Keskimmäisestä oikealle kaikki lukee mustaa jotenka käännytään oikealle
-  if((sensori1 == 1) && (sensori2 == 1) && (sensori3 == 0) && (sensori4 == 0) && (sensori5 == 0))
-  {
-    analogWrite(enableOikea, 180);
-    analogWrite(enableVasen, 180); 
-    digitalWrite(vasenEteen, HIGH);
-    digitalWrite(oikeaEteen, LOW);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
-  }
-
-  //Kaikki sensorit lukee mustaa eli pysähtyy
-  if((sensori1 == 0) && (sensori2 == 0) && (sensori3 == 0) && (sensori4 == 0) && (sensori5 == 0))
-  {
-    digitalWrite(vasenEteen, LOW);
-    digitalWrite(oikeaEteen, LOW);
-    digitalWrite(vasenTaakse, LOW);
-    digitalWrite(oikeaTaakse, LOW);
+  else if (activeSensors == 0) {
+    unsigned long timeLost = millis() - lastLineTime;
+    if (timeLost < 800) {
+      if (lastDirection == -1) {
+        analogWrite(enableVasen, 60);
+        analogWrite(enableOikea, 160);
+        vasen();
+      } else {
+        analogWrite(enableVasen, 160);
+        analogWrite(enableOikea, 60);
+        oikea();
+      }
+    } else {
+      analogWrite(enableVasen, 100);
+      analogWrite(enableOikea, 100);
+      oikea(); // spin search
+    }
   }
 }
 
@@ -242,27 +179,54 @@ void seis(){
 }
 void vaista(){
   seis();
+  asetaNopeus(150,150);
   piippaus();
   delay(500);
   oikea();
-  delay(2000);
+  delay(500);
+  asetaNopeus(75,75);
   eteenpain();
-  delay(700);
+  delay(1500);
+  asetaNopeus(150,150);
   vasen();
-  delay(2000);
+  delay(500);
+  asetaNopeus(75,75);
   eteenpain();
-  vaistoliike = false;
+  delay(1000);
+  asetaNopeus(150,150);
+  vasen();
+  delay(400);
+  asetaNopeus(75,75);
+  eteenpain();
+
 }
 //vauhti asteikolla 0-255
 void loop() {
-
-  if(etaisyys<20){
-    asetaNopeus(100,100);
+  etaisyys = skannaa();
+  if(etaisyys<maxEtaisyys){
     vaistoliike = true;
     vaista();
     delay(500);
+ }
+  if(vaistoliike){
+    int s1 = !digitalRead(ir1);
+    int s2 = !digitalRead(ir2);
+    int s3 = !digitalRead(ir3);
+    int s4 = !digitalRead(ir4);
+    int s5 = !digitalRead(ir5);
+
+    Serial.print(s1);
+    Serial.print(s2);
+    Serial.print(s3);
+    Serial.print(s4);
+    Serial.println(s5);
+    if((s1 == 1) || (s2 == 1) || (s3 == 1) || (s4 == 1) || (s5 == 1)){
+      vaistoliike  = false;
+    }
+  }
+  if(!vaistoliike){
+  viivanSeurantaPD();
   }
   
-  etaisyys = skannaa();
 
 }
